@@ -1,0 +1,248 @@
+{% set body_class = 'lander history-lander ' ~ entry.slug %}
+{% include 'includes/header' %}
+{% set myCss %}
+	.progress {
+		width: 100%;
+		height: 18px;
+		background-color: #9d9d9c;
+		border-top: 1px #9d9d9c solid;
+		border-bottom: 1px #9d9d9c solid;
+		margin-top: -30px;
+		margin-bottom: 30px;
+	}
+	
+	.progress .bar {
+		height: 100%;
+		width: 10%;
+		transition: background .15s ease;
+	}
+{% endset %}
+
+{% includeCss myCss %}
+{% set myJs %}
+
+	function progress() {
+		
+		var scrollPosLeft = $('#timeline').scrollLeft();
+		var scrollerWidth = document.getElementById('timeline').scrollWidth;
+		var containerWidth = $(window).width();
+		var $progress = scrollPosLeft / (scrollerWidth - containerWidth) * 90; // 90% because progress indicator is 10% width...
+		var $bgColor = '#ffffff';
+		$marginLeft = $progress + '%';
+		$('.progress .bar').css({'background-color': $bgColor, 'margin-left': $marginLeft});
+	}
+	
+	$(window).on('load', function () {
+		if (document.getElementById('timeline').scrollWidth > $(window).width()) {
+			$('<div class="progress"><div class="bar"></div></div>').insertAfter('#timeline');
+			progress();
+		}
+	});
+	
+	$('#timeline').on('scroll', progress);
+	
+{% endset %}
+
+{% includeJs myJs %}
+
+<main id="page-content">
+	<nav aria-label="Breadcrumb" class="page-width breadcrumb">
+		<ol>
+			<li><a href="/">{{ craft.ilab.loc('homepage') }}</a></li>
+			{# this is good for finding a place in a submenu... #}
+			{% set thisSlugStr = '{\/'~entry.slug~'$}' %}
+			{% set thisChildMenu = false %}
+			{% set mainItems = craft.entries().section('navigation').level(1).all() %}
+			{% if mainItems %}
+				{% for mainItem in mainItems %}
+					{% set subItems = craft.entries().section('navigation').descendantOf(mainItem).all() %}
+					{% if thisChildMenu == false and  mainItem.navItemLink %}
+						{% if subItems %}
+							{% for subItem in subItems %}
+								{% if thisChildMenu == false and subItem.navItemLink matches "#{thisSlugStr}" %}
+									{% set thisChildMenu = true %}
+								{% endif %}
+							{% endfor %}
+							{% if thisChildMenu == true %}
+								<li><a href="{{ mainItem.navItemLink }}">{{ mainItem.navItemLabel }}</a></li>
+							{% endif %}
+						{% endif %}
+					{% endif %}
+				{% endfor %}			
+			{% endif %}
+			<li aria-current="page">{{ entry.title }}</li>
+		</ol>
+	</nav>
+	<header id="content-header" class="page-width has-menu">
+	    {% if entry.articleMainImage|length %}
+			<div class="image-wrap">
+				{% set asset = entry.articleMainImage[0] %}						
+				{% do asset.setTransform({ width: 345, height: 235, mode: 'crop', format: 'jpg', quality: 75 }) %}
+				{{ tag('img', {
+				    src: asset.url,
+				    width: asset.width,
+				    height: asset.height,
+				    alt: asset.title,
+				    srcset: asset.getSrcset(['450w', '633w', '1000w']),
+				    sizes: '(min-width: 576px) 633px,
+					 		calc(100vw - 30px)',
+					role: 'presentation'
+				}) }}
+			</div>
+		{% endif %}
+		<div class="text-wrap">
+			<h1>{{ entry.title }}</h1>
+			{% include 'includes/submenu.twig' %}
+		</div>
+	</header>
+	
+	{% if (entry.articleLead is defined and entry.articleLead is not empty) or entry.articleBody|length %}
+		<div class="centered page-width intro mb">
+			{% if entry.articleLead is defined and entry.articleLead is not empty %}
+				<div class="lead">{{ entry.articleLead|nl2br }}</div>
+			{% endif %}
+			{% if entry.articleBody|length %}	
+				{% for block in entry.articleBody.all() %}
+			        {% if block.type == 'textBlock' %}
+		                <div class="text-block">{{ block.textHtml }}</div>
+			        {% elseif block.type == 'imageBlock' and block.imageAsset|length %}
+		                <figure>
+							{% set asset = block.imageAsset[0] %}						
+							{% do asset.setTransform({ width: 345, mode: 'fit', format: 'jpg', quality: 75 }) %}
+							{{ tag('img', {
+							    src: asset.url,
+							    width: asset.width,
+							    height: asset.height,
+							    alt: asset.title,
+							    srcset: asset.getSrcset(['738w', '1170w', '1755w']),
+							    sizes: '(min-width: 1230px) 1170px,
+									    (min-width: 1130px) calc(100vw - 60px),
+								 		calc(100vw - 30px)'
+							}) }}
+			                {% if block.imageCaption is defined and block.imageCaption is not empty %}
+				                <figcaption>{{ block.imageCaption }}</figcaption>
+			                {% endif %}
+		                </figure>
+			        {% endif %}
+				{% endfor %}
+			{% endif %}
+		</div>
+	{% endif %}
+
+
+
+
+	
+	{% if entry.articleType is defined and entry.articleType|length %}
+		{% set category = entry.articleType %}
+	{% elseif entry.articleTopics is defined and entry.articleTopics|length %}
+		{% set category = entry.articleTopics %}
+	{% endif %}
+
+	{% set theArticles = craft.entries()
+		.section('articles')
+		.relatedTo(category)
+		.orderBy('title asc')
+	    .activeOff(true)
+		.limit(12)
+	%}	
+	
+	<div id="primary" class="centered">
+	
+		<h2>{{ craft.ilab.loc('ilab-timeline') }}</h2>
+		
+		<div class="grayscale horiz-scroll timeline circle" id="timeline">
+		
+			{% for r in theArticles.all() %}
+				<div class="item">
+					<a href="#hist-{{ loop.index }}" class="box-link" aria-label="{{ craft.ilab.loc('click-to-read-this-article') }}">
+					    {% if r.timelineImage|length %}
+							{% set asset = r.timelineImage[0] %}						
+					    {% elseif r.articleMainImage|length %}
+							{% set asset = r.articleMainImage[0] %}						
+					    {% endif %}
+					    {% if asset is defined %}
+							<div class="image-wrap">
+								{% do asset.setTransform({ width: 185, height: 185, mode: 'crop', format: 'jpg', quality: 75 }) %}
+								{{ tag('img', {
+								    src: asset.url,
+								    width: asset.width,
+								    height: asset.height,
+								    alt: asset.title,
+								    srcset: asset.getSrcset(['2x']),
+									role: 'presentation'
+								}) }}
+							</div>
+					    {% else %}
+					        <div class="image-wrap no-photo"><img src="/images/no-photo.svg" alt="{{ craft.ilab.loc('no-photo-available') }}" role="presentation"></div>
+					    {% endif %}
+						<div class="text-wrap">
+							<h3 class="article-title">{{ r.title }}</h3>
+							<p class="desc">
+								{% if r.timelineShortSummary is defined and r.timelineShortSummary is not empty %}
+									{{ r.timelineShortSummary }}
+								{% elseif r.articleLead is defined and r.articleLead is not empty %}
+									{{ r.articleLead|striptags|truncate(150) }}
+								{% elseif r.articleStory is defined and r.articleStory is not empty %}
+									{{ r.articleStory|striptags|truncate(150) }}
+								{% endif %}										
+							</p>
+							<div class="more">{{ craft.ilab.loc('read-more') }}</div>
+						</div>
+					</a>
+				</div>
+			{% endfor %}
+
+		</div>
+		
+			
+		<div class="page-width history-summary mt-bigger">
+			{% for r in theArticles.all() %}
+				<div class="item row" id="hist-{{ loop.index }}">
+					<div class="col-12 col-sm-5 mb-4 mb-sm-0">
+					
+					    {% if r.articleExcerptImage|length and r.articleExcerptImage[0].url is not empty %}
+							<figure>
+								<img src="{{ r.articleExcerptImage[0].url }}" alt="" width="" height="" role="presentation">
+							    {% if r.excerptImageCaption|length and r.excerptImageCaption is not empty %}
+								    <figcaption>{{ r.excerptImageCaption }}</figcaption>
+							    {% endif %}
+							</figure>
+					    {% elseif r.articleMainImage|length %}
+							<figure><img src="{{ r.articleMainImage[0].url }}" alt="" width="" height="" role="presentation"></figure>
+					    {% endif %}
+						
+						{% if r.blockQuote is defined and r.blockQuote is not empty %}
+						<blockquote class="type-1">
+							<p>{{ r.blockQuote }}</p>
+							{% if r.blockQuoteAuthor is defined and r.blockQuoteAuthor is not empty %}
+								<p class="speaker">{{ r.blockQuoteAuthor }}</p>
+							{% endif %}
+						</blockquote>
+						{% endif %}
+					</div>
+					<div class="col-12 col-sm-7">
+						<div class="text-wrap">
+							<h3 class="title">{{ r.title }}</h3>
+							{% if r.subtitle is defined and r.subtitle is not empty %}
+								<h4 class="subtitle">{{ r.subtitle }}</h4>
+							{% endif %}										
+							<div class="long-summary">
+								{% if r.articleExcerpt is defined and r.articleExcerpt is not empty %}
+									{{ craft.ilab.nlCleanUp(r.articleExcerpt)|raw }}
+								{% elseif r.articleBody[0]|length and r.articleBody[0].type == 'textBlock' and r.articleBody[0].textHtml != '' %}
+									{{ r.articleBody[0].textHtml }}
+								{% endif %}										
+							</div>
+							<div class="more"><a href="{{ r.url }}">{{ craft.ilab.loc('click-to-read-this-article') }}</a></div>
+						</div>
+					</div>
+				</div>
+			{% endfor %}
+
+		</div>
+	</div>			
+
+</main>
+
+{% include 'includes/footer' %}

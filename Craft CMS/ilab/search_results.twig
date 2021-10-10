@@ -1,0 +1,155 @@
+{# Book Search Results #}
+{% set body_class = 'book-search-results' %}
+{# this is a hack so ILAB can edit the title and have some intro content #}
+{% set results_page = craft.entries.section('pages').slug('book-search-results').one() %}
+{% if results_page.title is defined and results_page.title is not empty %}
+	{% set pageTitle = results_page.title %}
+{% else %}
+	{% set pageTitle = craft.ilab.loc('book-search-results') %}
+{% endif %}
+{% set queryParams = craft.app.request.getQueryParams() %}
+{% set terms = '' %}
+{% if queryParams is defined and queryParams is not empty %}
+	{% set termParams = queryParams %}
+	{% for k,v in termParams %}
+		{% if v != '' %}
+			{% if k != 'page' and k != 'CRAFT_CSRF_TOKEN' and k != 'sort_by' and k != 'action' and k != 'currency' %}
+				{% if k == 'title' %}
+					{% set k = craft.ilab.loc('title') %}
+				{% elseif k == 'author' %}
+					{% set k = craft.ilab.loc('author') %}
+				{% elseif k == 'publisher' %}
+					{% set k = craft.ilab.loc('publisher') %}
+				{% elseif k == 'all_text' %}
+					{% set k = craft.ilab.loc('keywords') %}
+				{% elseif k == 'year_min' %}
+					{% set k = craft.ilab.loc('publication-year-range') ~ ' (' ~ craft.ilab.loc('minimum') ~ ')' %}
+				{% elseif k == 'year_max' %}
+					{% set k = craft.ilab.loc('publication-year-range') ~ ' (' ~ craft.ilab.loc('maximum') ~ ')' %}
+				{% elseif k == 'price_min' %}
+					{% set k = craft.ilab.loc('price') ~ ' (' ~ craft.ilab.loc('minimum') ~ ')' %}
+				{% elseif k == 'price_max' %}
+					{% set k = craft.ilab.loc('price') ~ ' (' ~ craft.ilab.loc('maximum') ~ ')' %}
+				{% endif %}
+				{% set terms = terms~'<span class="term">'~k|title~' = '~v~'</span>' %}
+		    {% endif %}
+	    {% endif %}
+	{% endfor %}		
+{% endif %}
+
+{% include 'includes/header' %}
+
+<main id="page-content" class="page-width">
+	<nav aria-label="Breadcrumb" class="breadcrumb">
+		<ol>
+			<li><a href="/">{{ craft.ilab.loc('homepage') }}</a></li>
+			{# this is good for finding a place in a submenu... #}
+			{% set refPageSlug = 'book-search' %}
+			{% set thisSlugStr = '{\/'~refPageSlug~'$}' %}
+			{% set thisChildMenu = false %}
+			{% set mainItems = craft.entries().section('navigation').level(1).all() %}
+			{% if mainItems %}
+				{% for mainItem in mainItems %}
+					{% set subItems = craft.entries().section('navigation').descendantOf(mainItem).all() %}
+					{% if thisChildMenu == false and mainItem.navItemLink %}
+						{% if subItems %}
+							{% for subItem in subItems %}
+								{% if thisChildMenu == false and subItem.navItemLink matches "#{thisSlugStr}" %}
+									{% set thisChildMenu = true %}
+								{% endif %}
+							{% endfor %}
+							{% if thisChildMenu == true %}
+								<li><a href="{{ mainItem.navItemLink }}">{{ mainItem.navItemLabel }}</a></li>
+							{% endif %}
+						{% endif %}
+					{% endif %}
+				{% endfor %}			
+			{% endif %}
+			{% set catlander = craft.entries.section('pages').slug(refPageSlug).one() %}
+			{% if catlander %}
+				<li><a href="{{ catlander.url }}">{{ catlander.title }}</a></li>
+			{% endif %}
+			<li aria-current="page">{{ craft.ilab.loc('book-search-results') }}</li>
+		</ol>
+	</nav>
+	<header id="content-header" class="">
+		<h1>{{ pageTitle }}</h1>
+		{% if results.data.results.page == 1 %}
+			{% if results_page.customHtml is defined and results_page.customHtml is not empty %}
+				<div class="intro">{{ results_page.customHtml }}</div>
+			{% endif %}
+		{% endif %}
+		{% if terms is defined and terms is not empty %}
+			<div class="search-terms">
+				<span class="label">{{ craft.ilab.loc('you-searched-for') }}:</span> {{ terms|raw }}
+			</div>
+	    {% endif %}
+		{% if results.data.results.total > 0 %}
+			<div class="results-found">{{ results.data.results.total is not empty ? results.data.results.total : 0}} {{ craft.ilab.loc('matches-found-for-search') }}</div>
+		{% else %}
+			<h4 class="warning">{{ craft.ilab.loc('no-results-found-try-again') }}</h4>
+		{% endif %}
+	</header>
+	{% if error is defined %}
+		{{ error.status }} - {{ error.message }}
+	{% elseif results.data.results.total == 0 %}
+		{{ craft.ilab.loc('no-results-found') }}
+	{% else %}
+	
+		{% include 'book/includes/results-controls' %}
+		<div class="summary type-1 row">
+			{% set currencySymbol = craft.ilab.getCurrencySymbol(results.data.currency) %}
+			{% for r in results.data.results.data %}
+			
+				<div class="col-12 col-sm-6 col-md-3 item">
+			        <div class="image-wrap">
+						{% if r.image_url|length %}
+							<img width="100" src="{{ r.image_url }}" alt="{{ r.title|raw }}">
+						{% else %}
+							<div class="no-photo-wrap">{{ craft.ilab.loc('no-photo-available') }}</div>
+						{% endif %}
+					</div>
+					<div class="text-wrap">
+			            <h4 class="title">{{ r.title|raw }}</h4>
+			            {% if r.author %}<div class="author">{{ craft.ilab.loc('by') }} {{ r.author|raw }}</div>{% endif %}
+						<div class="description expander" data-rows="3">{{ r.description|raw  }}</div>
+						{% set ilabProfile = '' %}
+						{% if r.dealer.association_memberships|length %}
+							{% for am in r.dealer.association_memberships %}
+								{% if am.association == 'ilab' %}
+									{% set ilabProfile = am.profile_url %}
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+						<div class="offered-by">
+							{{ craft.ilab.loc('offered-by') }}
+							{% if ilabProfile %}
+								<a href="{{ ilabProfile }}">{{ r.dealer.name }}</a>
+							{% else %}
+								{{ r.dealer.name }}
+							{% endif %}
+							<br>{{ r.dealer.location }}
+						</div>
+				        <div class="actions">
+							{% if r.links|length %}
+								<div class="purchase-options">
+									<strong>{{ r.links|length > 1 ? craft.ilab.loc('purchase-options') : craft.ilab.loc('purchase-option') }}</strong>
+									<ul>
+										{% for link in r.links %}
+											<li><a href="{{ link.url }}">{{ link.aggregator_name == 'Direct From Seller' ? craft.ilab.loc('direct-from-seller') : link.aggregator_name }}</a> <span class="price"><span class="currency-symbol">{{ currencySymbol }}</span>{{ (link.price/100)|number_format(2, '.', ',') }}</span></li>
+										{% endfor %}
+									</ul>
+								</div>
+							{% endif %}
+				        </div><!-- /.actions -->
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+		{% include 'book/includes/results-controls' %}
+
+	{% endif %}
+	
+</main>
+
+{% include 'includes/footer' %}

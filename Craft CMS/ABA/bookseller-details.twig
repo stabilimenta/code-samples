@@ -1,0 +1,309 @@
+{% set urlString = craft.app.request.segments[1] %}
+{% set foundwhere = 'trading-name' %}
+{% set bookSeller = null %}
+
+{# find bookseller by aba id #}
+{% if bookSeller is null and urlString|length %}
+	{% set foundwhere = 'aba-id' %}
+	{% set bookSeller = craft.users.id(urlString).one() %}
+{% endif %}
+
+{# find bookseller by bibio id #}
+{% if bookSeller is null and urlString|length %}
+	{% set foundwhere = 'biblio-id' %}
+	{% set bookSeller = craft.users.biblioSellerId(urlString).one() %}
+	{# retirect to trading name #}
+	{% if bookSeller is not null %}
+		{% redirect '/profile/' ~ bookSeller.id ~'/' ~ bookSeller.tradingName|replace({' ':'-',' &':'','(':'',')':'','.':'',',':'',"'":""}) %}
+	{% endif %}
+{% endif %}
+{# find bookseller by fullname #}
+{% if bookSeller is null and urlString|length %}
+	{% set foundwhere = 'fullname' %}
+	{% set bookSeller = craft.users.search('fullName::"' ~ urlString ~ '"').orderBy('score').one() %}
+	{# retirect to trading name #}
+	{% if bookSeller is not null %}
+		{% redirect '/profile/' ~ bookSeller.id ~ '/' ~ bookSeller.tradingName|replace({' ':'-',' &':'','(':'',')':'','.':'',',':'',"'":""}) %}
+	{% endif %}
+{% endif %}
+	
+{% set pageTitle = bookSeller.tradingName  ~ ' Details' %}
+{% set seoTitle = bookSeller.tradingName  ~ ' | ' ~ siteName  %}
+{% set seoDescription = 'Rare Books from ' ~ bookSeller.tradingName ~ ' at ' ~ siteName %}
+	
+{% extends 'layout/skeleton/default' %}
+
+{% block content %}
+
+	{% if bookSeller is not null %}
+		<div id="page-content" class="page-width bookseller-details">
+			
+			<nav aria-label="Breadcrumb" class="breadcrumb">
+		        <ol>
+					<li><a href="/">Home</a></li>
+					<li><a href="/find-bookseller">Find a Bookseller</a></li>
+					<li aria-current="page">{{ bookSeller.tradingName }}</li>
+		        </ol>
+			</nav>
+	
+			<main id="primary">
+				<section class="row" id="seller-info">
+					<div class="col-12 col-sm">
+						<header id="content-header">
+					        <h1>{{ bookSeller.tradingName }}</h1>
+					        <div class="post-meta">
+								<div class="location">{{ bookSeller.primaryAddress.city }}, {{ bookSeller.primaryAddress.country }}</div>
+								<div class="member-since">ABA Member since {{ bookSeller.yearJoined }}</div>
+					        </div>
+						</header>
+						
+						{% if bookSeller.businessDescription|length %}
+							<div class="about">
+								<h4>About {{ bookSeller.tradingName }}</h4>
+								<p>{{ bookSeller.businessDescription }}</p>
+							</div>
+						{% elseif bookSeller.specialties.all()|length %}
+							<div class="specialities">
+								<h4>{{ bookSeller.tradingName }} Specialises In</h4>
+								<ul class="text-cols">
+									{% for special in bookSeller.specialties.all() %}
+										<li>{{ special.title }}</li>
+									{% endfor %}
+								</ul>
+							</div>
+						{% endif %}
+						
+						{% if bookSeller.termsOfSale|length %}
+							<div class="boxed">
+								<h4 class="terms-of-sale-title mb-2">Terms of Sale for {{ bookSeller.tradingName }}</h4>
+								<p class="terms-of-sale-text mb-0">{{ bookSeller.termsOfSale}}</p>
+							</div>
+						{% endif %}
+					</div>
+					<div class="col-12 col-sm mt-4 mt-sm-0">
+						{% if bookSeller.shopPhoto | length %}
+							<div class="image-wrap seller-logo">
+								<img src="{{ bookSeller.shopPhoto.one().getUrl() }}" alt="{{ bookSeller.tradingName }} shop photo">
+							</div>
+						{% else %}
+							{% if bookSeller.hidePhysicalAddressToPublic|length %}
+								{% set options = {
+									id: 'google-map',
+									zoom: 12,
+									markerOptions: {
+										icon: '/images/invisible.gif'
+									},
+									infoWindowOptions: {
+										maxWidth: 200
+									}
+								} %}
+								{{ craft.smartMap.map(bookSeller,options) }}
+							{% else %}
+								{% set options = {
+									id: 'google-map',
+									zoom: 12,
+									markerOptions: {
+										icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+									},
+									infoWindowOptions: {
+										maxWidth: 200
+									}
+								} %}
+								{{ craft.smartMap.map(bookSeller,options) }}
+							{% endif %}
+						{% endif %}
+					</div>
+				</section>
+				
+				{% if bookSeller.biblioSellerId|length or (bookSeller.businessDescription|length and bookSeller.specialties.all()|length) or bookSeller.shopPhoto | length %}
+					<section class="row" id="seller-books">
+					
+						{% if bookSeller.biblioSellerId|length %}
+							<div class="col-12 col-sm-6 col-md search-seller">
+								<h4>Search {{ bookSeller.tradingName }}'s Inventory</h4>
+								<form action="/actions/biblio-search/default/search">
+									<input type="hidden" name="seller_id" value="{{bookSeller.biblioSellerId}}">
+									<div class="form-group">
+										<label for="bss-title">Title</label>
+										<input required=""type="text" id="bss-title" name="title" value="" class="form-control unit-frb valid">
+									</div>
+									<div class="form-group">
+										<label for="bss-author">Author</label>
+										<input required="" type="text" name="author" id="bss-author" class="form-control unit-frb valid" value="">
+									</div>
+									<div class="form-group">
+										<label for="bss-keywords">Keywords</label>
+										<input required="" type="text" id="bss-keywords" name="all_text" value="" class="form-control unit-frb valid">
+									</div>
+									<div class="form-group submit-row">
+										<button type="submit" class="btn">Search</button>
+									</div>
+								</form>
+							</div>
+						{% endif %}
+					
+						{% if bookSeller.businessDescription|length and bookSeller.specialties.all()|length %}
+							<div class="col-12 col-sm-6 col-md mt-4 mt-sm-0 specialities">
+								<h4>{{ bookSeller.tradingName }} Specialises In</h4>
+								<ul class="text-cols">
+									{% for special in bookSeller.specialties.all() %}
+										<li>{{ special.title }}</li>
+									{% endfor %}
+								</ul>
+							</div>
+						{% endif %}
+						
+						{% if bookSeller.shopPhoto | length %}
+							<div class="col-12 col-md seller-map mt-4 mt-md-0">
+								{% if bookSeller.hidePhysicalAddressToPublic|length %}
+									{% set options = {
+										id: 'google-map',
+										zoom: 12,
+										markerOptions: {
+											icon: '/images/invisible.gif'
+										},
+										infoWindowOptions: {
+											maxWidth: 200
+										}
+									} %}
+									{{ craft.smartMap.map(bookSeller,options) }}
+								{% else %}
+									{% set options = {
+										id: 'google-map',
+										zoom: 12,
+										markerOptions: {
+											icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+										},
+										infoWindowOptions: {
+											maxWidth: 200
+										}
+									} %}
+									{{ craft.smartMap.map(bookSeller,options) }}
+								{% endif %}
+							</div>
+						{% endif %}
+						
+					</section>
+				{% endif %}
+
+				<section class="row" id="seller-contact">
+				
+					<div class="col-12 col-sm contact">
+						<h4 class="trade-name">{{ bookSeller.tradingName }}</h4>
+						{% if bookSeller.name != bookSeller.tradingName %}
+							<div class="seller-name">{{ bookSeller.name }}</div>
+						{% endif %}
+						<address>
+							{% if bookSeller.hidePhysicalAddressToPublic|length %}
+								<div class="city-zip">
+									{% if bookSeller.primaryAddress.city|length %}{{ bookSeller.primaryAddress.city }}, {% endif %}
+									{% if bookSeller.primaryAddress.country|length %}{{ bookSeller.primaryAddress.country }}{% endif %}
+								</div>
+							{% else %}
+								{% if bookSeller.primaryAddress.street1|length %}
+									<div class="street-1">{{ bookSeller.primaryAddress.street1 }}</div>
+								{% endif %}
+								{% if bookSeller.primaryAddress.street2|length %}
+									<div class="street-2">{{ bookSeller.primaryAddress.street2 }}</div>
+								{% endif %}
+								<div class="city-zip">
+									{% if bookSeller.primaryAddress.city|length %}{{ bookSeller.primaryAddress.city }}{% endif %}
+									{% if bookSeller.primaryAddress.zip|length %}{{ bookSeller.primaryAddress.zip }}{% endif %}
+								</div>
+								{% if bookSeller.primaryAddress.country|length %}
+									<div class="country">{{ bookSeller.primaryAddress.country }}</div>
+								{% endif %}
+							{% endif %}
+						</address>
+					</div>
+					<div class="col-12 col-sm mt-4 mt-sm-0">
+						{% if bookSeller.publiclySharedEmail|length %}
+							<div class="label">Email address:</div>
+							<a href="mailto:{{bookSeller.publiclySharedEmail}}">{{bookSeller.publiclySharedEmail}}</a>
+						{% endif %}
+						{% if bookSeller.website|length %}
+							<div class="label">Website:</div>
+							<a href="{{bookSeller.website}}" target="_blank">{{bookSeller.website|trim('https://')}}</a>
+						{% endif %}
+						{% if bookSeller.primaryTelephone|length %}
+							<div class="label">Phone number:</div>
+							<a href="tel:+{{bookSeller.primaryTelephone}}">+{{bookSeller.primaryTelephone}}</a>
+						{% endif %}
+						{% if bookSeller.socialNetworkLinks|length %}
+							<div class="seller-social">
+								<h4>Follow {{ bookSeller.tradingName }}</h4>
+								<ul class="social-icons">
+									{% for socialBlock in bookSeller.socialNetworkLinks.all %}
+										<li>
+											<a href="{{ socialBlock.socialNetworkLink }}" class="{{ socialBlock.selectSocialNetwork|lower }}">
+												{{ socialBlock.selectSocialNetwork|ucwords }}
+											</a>
+										</li>
+									{% endfor %}
+								</ul>
+							</div>
+						{% endif %}
+					</div>
+
+					{% if bookSeller.openingHours|length %}
+						<div class="col-12 col-sm mt-4 mt-sm-0 terms-of-sale-wrap">
+							<h4>Hours of Operation</h4>
+							<div>{{ bookSeller.openingHours}}</div>
+						</div>
+					{% endif %}
+						
+				</section>
+				
+				{% include '/pages/bookseller-details/components/_bs-featured.twig'
+					with {
+						"bookSellerName" : bookSeller.tradingName,
+						"sellerId" : bookSeller.biblioSellerId	
+					}
+				%}
+				
+				{% include '/pages/bookseller-details/components/_bs-catalogues.twig'
+					with {
+						"bookSellerName" : bookSeller.tradingName,
+						"catalogues" : bookSeller.memberCatalogues
+					}
+				%}
+				
+			</main>
+	
+		</div>
+
+	
+		
+	{% endif %}
+	
+	
+	
+{% endblock %}
+
+{% block footerScripts %}
+    <script>
+        $(document).ready(function () {
+            let checkIsOneFilled = () => {
+                let valid = false;
+                $('.unit-frb').each(function (e) {
+                    if($(this).val().length > 0){
+                        valid = true;
+                    }
+                });
+                if(valid){
+                    $('.unit-frb').each(function (e) {
+                        $(this).removeAttr('required');
+                    });
+                }else{
+                    $('.unit-frb').each(function (e) {
+                        $(this).attr('required', 'required');
+                    });
+                }
+            };
+            checkIsOneFilled();
+            $('.unit-frb').on('input', function () {
+                checkIsOneFilled();
+            });
+        });
+    </script>
+{% endblock %}
