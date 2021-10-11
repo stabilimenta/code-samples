@@ -1,0 +1,241 @@
+.no-photo { background-color: #CCC; }
+
+.column-_project_date { width: 4em; }
+
+.column-photo img
+{
+	max-width: 100%;
+	height: auto !important;
+}
+
+.column-_featured
+{
+	width: 5em;
+	text-align: center;
+}
+
+.cmb2-wrap .row
+{
+	overflow: hidden;
+	padding: 0 0 1.8em;
+	margin: 0 0 .8em;
+	border-bottom: 1px #E9E9E9 solid;
+}
+
+.postbox-container .row .cmb-row,
+.postbox-container .row .cmb-row:not(:last-of-type),
+.postbox-container .row .cmb-row.group-head,
+.wp-admin .grouped .row
+{
+	border-bottom: 0 none !important;
+	padding-bottom: 0;
+	margin-bottom: 0;
+}
+
+.postbox-container h2 span.caption
+{
+	display: block;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #AAA;
+	font-style: italic;
+	font-weight: normal;
+	margin-top: 1em;
+}
+
+.wp-admin .cmb2-id--edg-texting-ok .cmb-th label { visibility: hidden; }
+
+.wp-admin .cmb-type-checkbox .cmb-td label
+{
+	color: #444;
+	font-style: normal;
+}
+
+.postbox-container .cmb-type-wysiwyg .cmb-th+.cmb-td
+{
+	width: 100%;
+	float: none;
+}
+
+.row.grouped label,
+.row .grouped label { font-weight: normal; }
+
+.row label span { color: #A60000; }
+
+.row .cmb2-wrap .cmb-row:after
+{
+	content: '';
+	clear: none;
+	display: none;
+	width: auto;
+}
+
+.row .stacked + .stacked { margin-top: 20px; }
+
+.row .inline
+{
+	display: inline-block;
+	padding-right: 20px !important;
+	white-space: nowrap;
+}
+
+.row .fifth
+{
+	width: 20%;
+	float: left;
+}
+
+.row .quarter
+{
+	width: 25%;
+	float: left;
+}
+
+.row .third
+{
+	width: 33%;
+	float: left;
+}
+
+.row .half
+{
+	width: 50%;
+	float: left;
+}
+
+.row .twothirds
+{
+	width: 66%;
+	float: left;
+}
+
+.postbox-container .row .cmb-th,
+.wp-admin .row .cmb-th
+{
+	float: none;
+	padding: 0;
+	width: auto;
+}
+
+.postbox-container .row .cmb-th+.cmb-td
+{
+	width: 80%;
+	float: none;
+}
+
+.wp-admin .row .cmb-td { padding: 0; }
+
+#title-prompt-text em { color: #C66; font-size: 80%; }
+#art_portfolio_admin_wrap .row
+{
+	overflow: hidden;
+	margin-top: 3px;
+}
+
+#art_portfolio_admin_wrap label
+{
+	width: 200px;
+	float: left;
+	text-align: right;
+	padding: 3px 10px 0 0;
+}
+#art_portfolio_admin_wrap .type1 { width: 200px; }
+#art_portfolio_admin_wrap textarea.type1 { height: 150px; }
+#art_portfolio_admin_wrap .type2 {}
+#art_portfolio_admin_wrap .type3 { width: 50px; }
+
+div.container { position: relative; }
+
+div.container a { display: inline-block; }
+
+.num_pics
+{
+	display: block;
+	font-size: 12px;
+	font-weight: bold;
+	line-height: 1;
+	padding: 2px 5px 4px 5px;
+	background-color: #000;
+	color: #FFF;
+	text-align: center;
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	z-index: 3;
+	box-shadow: 3px 3px 4px 0 rgba(0,0,0,0.4);
+	border-radius: 50%;
+}
+
+.num_pics span
+{
+	display: block;
+	font-size: 9px;
+}
+
+.cmb_id__cmb_proj_date span.cmb_metabox_description { color: #C66; display: inline; }
+
+#media-attachment-date-filters { min-width: 130px; }
+
+.wp-admin .attachment-details label.setting[data-setting="title"], 
+.wp-admin .attachment-details label.setting[data-setting="caption"] { display: none; }
+
+.post-type-art_portfolio table.fixed { table-layout: auto; }
+
+/* 
+.post-type-art_portfolio table.fixed th.sortable a, 
+.post-type-art_portfolio table.fixed th.sorted a { width: 65px; }
+ */
+
+.post-type-art_portfolio table.fixed .photo img { display: block; }
+.post-type-art_portfolio table.fixed .photo a { display: block; float: left; }
+
+.wp-admin div#taxonomy-piece_type,
+.categorydiv div.tabs-panel { max-height: none; }
+
+/* 
+.wp-admin #side-sortables table.cmb_metabox label { float: right; font-weight: normal; width: 90%; }
+ */
+
+table.cmb_metabox input[type=checkbox] { float: left; }
+
+.wp-admin #side-sortables table.form-table { margin-top: 15px; }
+
+.wp-admin #side-sortables table.cmb_metabox td
+{
+	border-top: 0 none;
+	margin: 0;
+	padding: 10px 10px 0 10px;
+}
+
+#side-sortables table.cmb_metabox .cmb_metabox_description { display: none; }
+
+.sorting-indicator
+{
+	display: block;
+	visibility: hidden;
+}
+
+th.sorted .sorting-indicator,
+th a:hover .sorting-indicator
+{
+	display: block;
+	visibility: visible;
+}
+
+.user-profile-picture { display: none; }
+
+.postbox-container .row .cmb-row { vertical-align: top; }
+
+.column-_homepage,
+.column-_status { text-align: center; }
+
+.warning
+{
+	color: #E00000;
+	font-weight: bold;
+}
+
+.wp-admin .cmb-repeatable-group .cmb-group-title { background-color: #FFF; }
+
+.cmb2-star-container { white-space: nowrap; }
+/* #adminmenu li#menu-posts-evg_art_portfolio a.menu-icon-evg_art_portfolio { color: #FFCF0D; } */
