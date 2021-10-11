@@ -1,0 +1,27 @@
+/*
+	Theme Name: Archwood 2.0
+	Used to style the TinyMCE editor.
+*/
+@import url("/archwood/wp-content/themes/archwood2/style.css");
+@import url('https://fonts.googleapis.com/css?family=Josefin+Sans:400,400i,700,700i|Montserrat:400,400i,700,700i');
+
+html
+{
+	background-color: #FFF !important;
+	background-image: none !important;
+}
+
+html .mceContentBody
+{
+	background-color: #FFF !important;
+	background-image: none !important;
+	width: auto;
+	text-align: left;
+	margin: 20px 10px;
+}
+
+.mceContentBody h3
+{
+	text-transform: none;
+	letter-spacing: normal;
+}
